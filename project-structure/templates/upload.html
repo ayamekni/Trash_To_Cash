@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Upload - Trash to Cash{% endblock %}
+
+{% block extra_head %}
+<style>
+    .drop-zone {
+        transition: all 0.3s ease;
+    }
+    .drop-zone.dragover {
+        background-color: rgba(52, 211, 153, 0.1);
+        border-color: #10B981;
+    }
+    .preview-image {
+        max-height: 300px;
+        max-width: 100%;
+        border-radius: 0.5rem;
+    }
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-center text-green-600 dark:text-green-400 mb-8">Upload an Image</h1>
+    
+    <div class="fade-in bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden">
+        <div class="p-6 md:p-8">
+            <form id="upload-form" method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="space-y-8">
+                <div id="drop-zone" class="drop-zone border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center relative">
+                    <input type="file" name="image" id="file-input" class="file-input" accept="image/*">
+                    
+                    <div id="upload-prompt" class="py-8">
+                        <div class="text-green-500 text-5xl mb-4">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-800 dark:text-white mb-2">Drag &amp; Drop Your Image Here</h3>
+                        <p class="text-gray-500 dark:text-gray-400 mb-4">or click to browse files</p>
+                        <button type="button" class="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300">
+                            Select File
+                        </button>
+                    </div>
+                    
+                    <div id="preview-container" class="hidden">
+                        <img id="preview-image" src="#" alt="Preview" class="preview-image mx-auto mb-4">
+                        <div class="flex items-center justify-center space-x-4">
+                            <p id="file-name" class="text-gray-600 dark:text-gray-300 text-sm"></p>
+                            <button type="button" id="remove-button" class="text-red-500 hover:text-red-600 transition-colors">
+                                <i class="fas fa-times-circle"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="camera-section" class="text-center">
+                    <div class="mb-4">
+                        <hr class="my-6 border-gray-200 dark:border-gray-700">
+                        <span class="text-gray-500 dark:text-gray-400">or</span>
+                    </div>
+                    
+                    <button type="button" id="camera-button" class="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300">
+                        <i class="fas fa-camera mr-2"></i> Take a Photo
+                    </button>
+                    
+                    <div id="camera-container" class="hidden mt-4">
+                        <video id="camera-feed" autoplay class="rounded-lg mx-auto max-w-full" style="max-height: 300px;"></video>
+                        <div class="mt-4 flex justify-center space-x-4">
+                            <button type="button" id="capture-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-camera mr-2"></i> Capture
+                            </button>
+                            <button type="button" id="cancel-camera-button" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-times mr-2"></i> Cancel
+                            </button>
+                        </div>
+                        <canvas id="canvas" class="hidden"></canvas>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button type="submit" id="submit-button" disabled class="bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 px-8 rounded-lg opacity-50 cursor-not-allowed transition-all duration-300 transform hover:scale-105">
+                        Analyze Image
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="mt-12 fade-in">
+        <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Tips for Better Results</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
+                <div class="text-blue-500 text-3xl mb-3 flex justify-center">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2 text-center">Good Lighting</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-center">
+                    Ensure your item is well lit for better recognition.
+                </p>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
+                <div class="text-blue-500 text-3xl mb-3 flex justify-center">
+                    <i class="fas fa-crop-alt"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2 text-center">Clear View</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-center">
+                    Position the item in the center without obstructions.
+                </p>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
+                <div class="text-blue-500 text-3xl mb-3 flex justify-center">
+                    <i class="fas fa-hand-paper"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2 text-center">Clean Items</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-center">
+                    Remove any dirt or stains for more accurate results.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-lg p-8 max-w-md w-full text-center">
+        <div class="inline-block animate-spin text-green-500 mb-4">
+            <i class="fas fa-circle-notch text-4xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Analyzing Your Image</h3>
+        <p class="text-gray-600 dark:text-gray-300">Please wait while our AI processes your image...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const fileName = document.getElementById('file-name');
+        const removeButton = document.getElementById('remove-button');
+        const submitButton = document.getElementById('submit-button');
+        const uploadForm = document.getElementById('upload-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const cameraButton = document.getElementById('camera-button');
+        const cameraContainer = document.getElementById('camera-container');
+        const cameraFeed = document.getElementById('camera-feed');
+        const captureButton = document.getElementById('capture-button');
+        const cancelCameraButton = document.getElementById('cancel-camera-button');
+        const canvas = document.getElementById('canvas');
+        
+        // File drag & drop handling
+        ['dragover', 'dragenter'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+        });
+        
+        ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        function handleFileSelect() {
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                
+                // Check if file is an image
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    return;
+                }
+                
+                // Display preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    fileName.textContent = file.name;
+                    uploadPrompt.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Remove button
+        removeButton.addEventListener('click', function() {
+            fileInput.value = '';
+            previewImage.src = '#';
+            fileName.textContent = '';
+            previewContainer.classList.add('hidden');
+            uploadPrompt.classList.remove('hidden');
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+        
+        // Camera functionality
+        let stream = null;
+        
+        cameraButton.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraFeed.srcObject = stream;
+                cameraContainer.classList.remove('hidden');
+                cameraButton.classList.add('hidden');
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Unable to access camera. Please make sure you have granted permission.');
+            }
+        });
+        
+        captureButton.addEventListener('click', function() {
+            const context = canvas.getContext('2d');
+            canvas.width = cameraFeed.videoWidth;
+            canvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+            
+            const capturedImage = canvas.toDataURL('image/jpeg');
+            previewImage.src = capturedImage;
+            fileName.textContent = 'Captured Image';
+            
+            // Convert data URL to Blob
+            canvas.toBlob(function(blob) {
+                // Create a File object
+                const capturedFile = new File([blob], "captured-image.jpg", { type: "image/jpeg" });
+                
+                // Create a new FileList object (not directly modifiable, this is a workaround)
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(capturedFile);
+                fileInput.files = dataTransfer.files;
+                
+                // Update UI
+                uploadPrompt.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                // Stop camera
+                stopCamera();
+            }, 'image/jpeg');
+        });
+        
+        cancelCameraButton.addEventListener('click', stopCamera);
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraContainer.classList.add('hidden');
+            cameraButton.classList.remove('hidden');
+        }
+        
+        // Form submission
+        uploadForm.addEventListener('submit', function() {
+            loadingOverlay.classList.remove('hidden');
+        });
+    });
+</script>

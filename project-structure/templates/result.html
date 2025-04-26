@@ -1,0 +1,320 @@
+
+{% extends "base.html" %}
+
+{% block title %}Results - Trash to Cash{% endblock %}
+
+{% block extra_head %}
+<style>
+    .recyclable-badge {
+        animation: pulse-success 2s infinite;
+    }
+    .non-recyclable-badge {
+        animation: pulse-danger 2s infinite;
+    }
+    @keyframes pulse-success {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    @keyframes pulse-danger {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .donut-chart {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        border-radius: 50%;
+        position: relative;
+    }
+    .donut-chart .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        width: 80%;
+        height: 80%;
+    }
+    .animate-chart {
+        animation: fill-chart 1.5s ease-in-out forwards;
+    }
+    @keyframes fill-chart {
+        0% { stroke-dasharray: 0 100; }
+    }
+    .material-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+    }
+    .recommendation-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .recommendation-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 16px -4px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .eco-impact-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Result Header -->
+    <div class="fade-in bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden mb-8">
+        <div class="p-6 md:p-8">
+            <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">Analysis Results</h1>
+            
+            <div class="flex flex-col md:flex-row items-center">
+                <!-- Image Preview -->
+                <div class="md:w-1/3 mb-6 md:mb-0 md:pr-6">
+                    <img src="{{ url_for('static', filename=prediction.image_path.split('/')[-1]) }}" alt="Analyzed item" class="rounded-lg shadow-md max-w-full mx-auto">
+                </div>
+                
+                <!-- Results Summary -->
+                <div class="md:w-2/3">
+                    {% if prediction.recyclable %}
+                    <div class="flex items-center bg-green-100 dark:bg-green-900 rounded-lg p-4 mb-6 recyclable-badge">
+                        <div class="text-green-500 dark:text-green-400 text-3xl mr-4">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-green-800 dark:text-green-300">Recyclable!</h2>
+                            <p class="text-green-700 dark:text-green-400">This item can be recycled. Great job!</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center bg-red-100 dark:bg-red-900 rounded-lg p-4 mb-6 non-recyclable-badge">
+                        <div class="text-red-500 dark:text-red-400 text-3xl mr-4">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-red-800 dark:text-red-300">Not Recyclable</h2>
+                            <p class="text-red-700 dark:text-red-400">This item should not go in your recycling bin.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Material Type -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Material Type:</h3>
+                        <div class="flex items-center">
+                            <span class="material-icon bg-blue-100 dark:bg-blue-900 text-blue-500 dark:text-blue-400 mr-3">
+                                {% if prediction.result.material == "plastic" %}
+                                <i class="fas fa-wine-bottle"></i>
+                                {% elif prediction.result.material == "paper" %}
+                                <i class="fas fa-newspaper"></i>
+                                {% elif prediction.result.material == "glass" %}
+                                <i class="fas fa-glass-martini-alt"></i>
+                                {% elif prediction.result.material == "metal" %}
+                                <i class="fas fa-utensils"></i>
+                                {% elif prediction.result.material == "organic" %}
+                                <i class="fas fa-apple-alt"></i>
+                                {% else %}
+                                <i class="fas fa-trash"></i>
+                                {% endif %}
+                            </span>
+                            <span class="text-lg font-medium text-gray-800 dark:text-white capitalize">{{ prediction.result.material }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Confidence Score -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Confidence Level:</h3>
+                        <div class="flex items-center">
+                            <div class="w-1/3">
+                                <svg class="donut-chart" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#e5e7eb" stroke-width="2"></circle>
+                                    <circle id="confidence-circle" class="animate-chart" cx="18" cy="18" r="15.91549430918954" fill="transparent" 
+                                            stroke="{% if prediction.recyclable %}#10B981{% else %}#EF4444{% endif %}" 
+                                            stroke-width="2" 
+                                            stroke-dasharray="{{ prediction.confidence * 100 }} {{ 100 - prediction.confidence * 100 }}" 
+                                            stroke-dashoffset="25"></circle>
+                                    <g class="chart-text">
+                                        <text x="18" y="18" font-family="Arial" font-size="0.6em" text-anchor="middle" alignment-baseline="middle" class="center" fill="#888">
+                                            {{ "%.0f"|format(prediction.confidence * 100) }}%
+                                        </text>
+                                    </g>
+                                    <div class="center bg-white dark:bg-slate-800"></div>
+                                </svg>
+                            </div>
+                            <div class="w-2/3 pl-4">
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                                    <div class="h-4 rounded-full {% if prediction.recyclable %}bg-green-500{% else %}bg-red-500{% endif %}" 
+                                         style="width: {{ prediction.confidence * 100 }}%"></div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    {% if prediction.confidence > 0.9 %}
+                                    Very high confidence
+                                    {% elif prediction.confidence > 0.7 %}
+                                    High confidence
+                                    {% elif prediction.confidence > 0.5 %}
+                                    Moderate confidence
+                                    {% else %}
+                                    Low confidence
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recommendations -->
+    <div class="fade-in bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden mb-8">
+        <div class="p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Recommendations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for recommendation in prediction.result.recommendations %}
+                <div class="recommendation-card bg-gray-50 dark:bg-slate-700 rounded-lg p-5 shadow-md">
+                    <div class="text-blue-500 dark:text-blue-400 text-xl mb-2">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">{{ recommendation }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Environmental Impact -->
+    <div class="fade-in bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden mb-8">
+        <div class="p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Environmental Impact</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div>
+                    <div class="eco-impact-value text-green-500 dark:text-green-400" id="energy-saved">0</div>
+                    <p class="text-gray-700 dark:text-gray-300">kWh Energy Saved</p>
+                </div>
+                <div>
+                    <div class="eco-impact-value text-blue-500 dark:text-blue-400" id="water-saved">0</div>
+                    <p class="text-gray-700 dark:text-gray-300">Gallons Water Saved</p>
+                </div>
+                <div>
+                    <div class="eco-impact-value text-purple-500 dark:text-purple-400" id="landfill-reduced">0</div>
+                    <p class="text-gray-700 dark:text-gray-300">lbs Landfill Reduced</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-gray-600 dark:text-gray-400">
+                    {% if prediction.recyclable %}
+                    By recycling this item, you're helping reduce waste and conserve natural resources.
+                    {% else %}
+                    Although this item isn't recyclable, proper disposal still helps protect the environment.
+                    {% endif %}
+                </p>
+                
+                <div class="mt-6">
+                    <a href="{{ url_for('upload') }}" class="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg inline-block transition-all duration-300 transform hover:scale-105">
+                        Analyze Another Item
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Share Results -->
+    <div class="fade-in bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden">
+        <div class="p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Share Your Impact</h2>
+            
+            <div class="flex justify-center space-x-4">
+                <button class="share-button bg-blue-500 hover:bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-colors">
+                    <i class="fab fa-facebook-f"></i>
+                </button>
+                <button class="share-button bg-blue-400 hover:bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition-colors">
+                    <i class="fab fa-twitter"></i>
+                </button>
+                <button class="share-button bg-green-500 hover:bg-green-600 text-white rounded-full w-12 h-12 flex items-center justify-center transition-colors">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button class="share-button bg-blue-700 hover:bg-blue-800 text-white rounded-full w-12 h-12 flex items-center justify-center transition-colors">
+                    <i class="fab fa-linkedin-in"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-600 dark:text-gray-400">
+                    Spread awareness about proper recycling practices and inspire others to make a difference!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Material-specific environmental impact calculations (these would be dynamic based on actual data)
+        const materialImpacts = {
+            'plastic': { energy: 5.8, water: 13.2, landfill: 0.3 },
+            'paper': { energy: 4.2, water: 7.5, landfill: 0.2 },
+            'glass': { energy: 2.7, water: 4.8, landfill: 0.5 },
+            'metal': { energy: 9.3, water: 6.1, landfill: 0.4 },
+            'organic': { energy: 1.5, water: 3.2, landfill: 0.6 },
+            'default': { energy: 0.8, water: 2.0, landfill: 0.1 }
+        };
+        
+        // Get the material from the prediction
+        const material = '{{ prediction.result.material }}';
+        const isRecyclable = {{ 'true' if prediction.recyclable else 'false' }};
+        
+        // Select the impact based on material, or use default if not found
+        const impact = materialImpacts[material] || materialImpacts.default;
+        
+        // If not recyclable, reduce the impact values
+        const multiplier = isRecyclable ? 1 : 0.2;
+        
+        // Animate the environmental impact counters
+        animateCounter('energy-saved', 0, impact.energy * multiplier);
+        animateCounter('water-saved', 0, impact.water * multiplier);
+        animateCounter('landfill-reduced', 0, impact.landfill * multiplier);
+        
+        // Share buttons functionality
+        document.querySelectorAll('.share-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // In a real app, this would open the sharing dialog for the respective platform
+                alert('Sharing functionality would be implemented here. This would open a sharing dialog for the respective platform.');
+            });
+        });
+    });
+    
+    function animateCounter(elementId, start, end) {
+        const element = document.getElementById(elementId);
+        const duration = 2000; // 2 seconds
+        const startTime = performance.now();
+        
+        function updateCounter(timestamp) {
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Use easeOutQuad for a smooth animation
+            const easeOutQuad = function(t) { return t * (2 - t); };
+            const easedProgress = easeOutQuad(progress);
+            
+            const value = start + (end - start) * easedProgress;
+            element.textContent = value.toFixed(1);
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            }
+        }
+        
+        requestAnimationFrame(updateCounter);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Trash to Cash{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <section class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-green-600 dark:text-green-400 mb-4">Welcome, {{ current_user.username }}!</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Ready to turn your trash into treasure? Upload an image and our AI will tell you if it's recyclable!
+        </p>
+    </section>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+            <div class="bg-gradient-to-r from-green-400 to-blue-500 p-6 flex justify-center">
+                <div class="text-white text-6xl bounce-in">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Upload New Image</h2>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">
+                    Upload a photo of an item and let our AI determine if it's recyclable. Get instant feedback and recommendations.
+                </p>
+                <a href="{{ url_for('upload') }}" class="block w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-lg text-center transition-all duration-300 transform hover:scale-105">
+                    Start Upload
+                </a>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-6 flex justify-center">
+                <div class="text-white text-6xl bounce-in" style="animation-delay: 0.2s;">
+                    <i class="fas fa-history"></i>
+                </div>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Your Recent Predictions</h2>
+                <div class="space-y-4" id="recent-predictions">
+                    <div class="text-center py-8">
+                        <div class="inline-block animate-spin text-gray-400 mb-4">
+                            <i class="fas fa-circle-notch text-4xl"></i>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400">Loading your recent predictions...</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="load-more" class="text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 font-medium">
+                        View All History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <section class="mt-16 max-w-5xl mx-auto">
+        <h2 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">How It Works</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
+                <div class="text-green-500 text-4xl mb-4">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">1. Take a Photo</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Snap a picture of any item you're unsure about recycling.
+                </p>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
+                <div class="text-blue-500 text-4xl mb-4">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">2. AI Analysis</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Our AI model analyzes the image to determine if it's recyclable.
+                </p>
+            </div>
+            
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
+                <div class="text-purple-500 text-4xl mb-4">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">3. Get Results</h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                    Receive instant feedback and recommendations for proper disposal.
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="mt-16 max-w-5xl mx-auto bg-white dark:bg-slate-800 rounded-lg shadow-xl overflow-hidden">
+        <div class="p-8">
+            <h2 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-6">Environmental Impact</h2>
+            <div class="flex flex-wrap justify-center gap-8 mb-6">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-green-500 mb-2" id="recycled-count">0</div>
+                    <p class="text-gray-600 dark:text-gray-300">Items Recycled</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-500 mb-2" id="co2-saved">0</div>
+                    <p class="text-gray-600 dark:text-gray-300">kg CO₂ Saved</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-500 mb-2" id="trees-saved">0</div>
+                    <p class="text-gray-600 dark:text-gray-300">Trees Equivalent</p>
+                </div>
+            </div>
+            <p class="text-center text-gray-600 dark:text-gray-300">
+                Join our community in making a positive impact on the environment through proper waste management.
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animations
+        gsap.from('.bounce-in', {
+            scale: 0.5,
+            opacity: 0,
+            duration: 0.8,
+            ease: "back.out(1.7)",
+            stagger: 0.2
+        });
+        
+        // Fetch recent predictions
+        fetchRecentPredictions();
+        
+        // Environmental impact counter animation
+        animateCounters();
+        
+        // Load more button
+        document.getElementById('load-more').addEventListener('click', function() {
+            // This would typically open a modal or navigate to a history page
+            alert('View all history functionality would go here');
+        });
+    });
+    
+    function fetchRecentPredictions() {
+        // In a real application, you would fetch from your API
+        fetch('/api/predictions')
+            .then(response => response.json())
+            .then(data => {
+                displayPredictions(data.slice(0, 3)); // Display 3 most recent
+            })
+            .catch(error => {
+                console.error('Error fetching predictions:', error);
+                displayNoPredictions();
+            });
+    }
+    
+    function displayPredictions(predictions) {
+        const container = document.getElementById('recent-predictions');
+        
+        if (predictions.length === 0) {
+            displayNoPredictions();
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        predictions.forEach(prediction => {
+            const date = new Date(prediction.created_at).toLocaleDateString();
+            const icon = prediction.recyclable ? 
+                '<i class="fas fa-check-circle text-green-500"></i>' : 
+                '<i class="fas fa-times-circle text-red-500"></i>';
+            
+            const result = prediction.recyclable ? 'Recyclable' : 'Non-recyclable';
+            const confidence = Math.round(prediction.confidence * 100);
+            
+            const html = `
+                <div class="flex items-center border-b dark:border-gray-700 pb-3">
+                    <div class="flex-shrink-0 mr-4 text-xl">
+                        ${icon}
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between">
+                            <span class="font-medium">${result}</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">${date}</span>
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            Confidence: ${confidence}%
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML += html;
+        });
+    }
+    
+    function displayNoPredictions() {
+        const container = document.getElementById('recent-predictions');
+        container.innerHTML = `
+            <div class="text-center py-6">
+                <div class="text-gray-400 mb-2">
+                    <i class="fas fa-inbox text-4xl"></i>
+                </div>
+                <p class="text-gray-500 dark:text-gray-400">No predictions yet</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    Upload an image to get started
+                </p>
+            </div>
+        `;
+    }
+    
+    function animateCounters() {
+        // For demonstration, these would be real stats from your backend
+        const recycledTarget = 1248;
+        const co2Target = 325;
+        const treesTarget = 18;
+        
+        const recycledElement = document.getElementById('recycled-count');
+        const co2Element = document.getElementById('co2-saved');
+        const treesElement = document.getElementById('trees-saved');
+        
+        gsap.to({val: 0}, {
+            val: recycledTarget,
+            duration: 3,
+            onUpdate: function() {
+                recycledElement.innerHTML = Math.round(this.targets()[0].val);
+            }
+        });
+        
+        gsap.to({val: 0}, {
+            val: co2Target,
+            duration: 3,
+            onUpdate: function() {
+                co2Element.innerHTML = Math.round(this.targets()[0].val);
+            }
+        });
+        
+        gsap.to({val: 0}, {
+            val: treesTarget,
+            duration: 3,
+            onUpdate: function() {
+                treesElement.innerHTML = Math.round(this.targets()[0].val);
+            }
+        });
+    }
+</script>
+{% endblock %}
